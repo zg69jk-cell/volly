@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid()) @db.Uuid
+  email        String      @unique
+  passwordHash String
+  preferences  Json?       @default("{\"theme\": \"system\", \"font_family\": \"sans-serif\"}")
+  createdAt    DateTime    @default(now())
+
+  // Relations
+  workspaces   Workspace[]
+  tags         Tag[]
+}
+
+model Workspace {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  name       String
+  icon       String?
+  colorTheme String?  @default("#F3F4F6")
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes      Note[]
+
+  @@index([userId])
+}
+
+model Note {
+  id           String    @id @default(uuid()) @db.Uuid
+  workspaceId  String    @db.Uuid
+  title        String    @default("Untitled")
+  content      Json?
+  isPinned     Boolean   @default(false)
+  reminderTime DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tags         Tag[]     // Prisma handles the join table automatically
+
+  @@index([workspaceId])
+}
+
+model Tag {
+  id       String  @id @default(uuid()) @db.Uuid
+  userId   String  @db.Uuid
+  name     String
+  colorHex String? @default("#D1D5DB")
+
+  // Relations
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes    Note[]  // Prisma handles the join table automatically
+
+  @@unique([userId, name])
+  @@index([userId])
+}

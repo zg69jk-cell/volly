@@ -1,0 +1,23 @@
+const newNote = await prisma.note.create({
+  data: {
+    title: 'Grocery List',
+    workspaceId: myWorkspaceId,
+    tags: {
+      connectOrCreate: [
+        {
+          where: {
+            userId_name: {
+              userId: myUserId,
+              name: 'Errands'
+            }
+          },
+          create: {
+            userId: myUserId,
+            name: 'Errands',
+            colorHex: '#FBBF24'
+          }
+        }
+      ]
+    }
+  }
+});
